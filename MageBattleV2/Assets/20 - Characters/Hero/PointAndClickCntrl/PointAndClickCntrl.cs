@@ -11,30 +11,35 @@ public class PointAndClickCntrl : MonoBehaviour
 
     private CharacterController charCntrl;
     private Vector2 movement;
-    private Vector3 direction = Vector3.zero;
+    private Vector3 moveDirection = Vector3.zero;
+    private Animator anim;
 
     // Start is called before the first frame update
     void Awake()
     {
         charCntrl = GetComponent<CharacterController>();
+        anim = GetComponent<Animator>();
+        anim.SetFloat("Speed", 1.0f);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        /*if (Mouse.current.leftButton.wasPressedThisFrame)
         {
-            Debug.Log("Left Button Clicked ...");
-            direction = ClickToMove(Mouse.current.position.ReadValue());
+            moveDirection = ClickToMove(Mouse.current.position.ReadValue());
+        }*/
+
+        if (moveDirection != Vector3.zero)
+        {
+            charCntrl.Move(moveDirection * moveSpeed * Time.deltaTime);
+
+            Quaternion directionRotation = Quaternion.LookRotation(moveDirection);
+            Quaternion rotation =
+                Quaternion.RotateTowards(transform.rotation, directionRotation, rotationSpeed * Time.deltaTime);
+
+            transform.rotation = rotation;
         }
-
-        charCntrl.Move(direction * moveSpeed * Time.deltaTime);
-
-        Quaternion directionRotation = Quaternion.LookRotation(direction);
-        Quaternion rotation =
-            Quaternion.RotateTowards(transform.rotation, directionRotation, rotationSpeed * Time.deltaTime);
-
-        transform.rotation = rotation;
     }
 
     private Vector3 ClickToMove(Vector2 targetMousePosition)
@@ -52,10 +57,19 @@ public class PointAndClickCntrl : MonoBehaviour
 
     public void OnMove(InputAction.CallbackContext context)
     {
-        if (context.started)
+        if (!context.started) return;
         {
-            Debug.Log($"Mouse: {context.ReadValue<Vector2>()}");
-            movement = context.ReadValue<Vector2>();
+            Debug.Log("OnMove ...");
+            moveDirection = ClickToMove(Mouse.current.position.ReadValue());
+        }
+    }
+
+    public void OnFire(InputAction.CallbackContext context)
+    {
+        if (!context.started) return;
+        {
+            Debug.Log("OnFire ...");
+            //moveDirection = ClickToMove(Mouse.current.position.ReadValue());
         }
     }
 }
