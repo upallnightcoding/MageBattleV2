@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 278a7c3003b87e34c9c9dd0f473842de, type: 3}
+  m_Name: HardBallSpell
+  m_EditorClassIdentifier: 
+  spellName: Ball
+  castPerSec: 4
+  castPerRound: 5
+  reloadTimeSec: 1
+  forwardForce: 100
+  fx: {fileID: 5770119758994083323, guid: 8d37137d624ffa54c90236fd3ea0d247, type: 3}
+  modelPreFab: {fileID: 5282470066545665838, guid: 11f26a810e5290e4ab41909ebd5fce0b, type: 3}
+  trail: {fileID: 0}
