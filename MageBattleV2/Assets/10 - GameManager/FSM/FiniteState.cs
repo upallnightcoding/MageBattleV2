@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class FiniteState 
+public abstract class FiniteState
 {
     public string Title { get; private set; }
+    public PlayerContext Context { get; set; }
 
     public FiniteState(string title)
     {
@@ -12,6 +13,6 @@ public abstract class FiniteState
     }
 
     public abstract void OnEnter();
-    public abstract string OnUpdate();
+    public abstract string OnUpdate(InputKeys inputKeys, float dt);
     public abstract void OnExit();
 }
