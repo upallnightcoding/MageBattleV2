@@ -13,6 +13,6 @@ public abstract class FiniteState
     }
 
     public abstract void OnEnter();
-    public abstract string OnUpdate(InputKeys inputKeys, float dt);
+    public abstract string OnUpdate(InputCntrl inputKeys, float dt);
     public abstract void OnExit();
 }

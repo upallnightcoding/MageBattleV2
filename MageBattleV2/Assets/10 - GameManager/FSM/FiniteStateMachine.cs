@@ -28,7 +28,7 @@ public class FiniteStateMachine
         }
     }
 
-    public void OnUpdate(InputKeys inputKeys, float dt)
+    public void OnUpdate(InputCntrl inputKeys, float dt)
     {
         if (nextState == null)
         {
@@ -43,5 +43,29 @@ public class FiniteStateMachine
                 nextState = null;
             }
         }
+
+        OnEveryUpdate();
+    }
+
+    public void OnUpdate1(InputCntrl inputKeys, float dt)
+    {
+        nextState = currentState.OnUpdate(inputKeys, dt);
+
+        if (nextState != null)
+        {
+            if (machine.TryGetValue(nextState, out FiniteState state))
+            {
+                currentState.OnExit();
+                currentState = state;
+                currentState.OnEnter();
+            }
+        }
+
+        OnEveryUpdate();
+    }
+
+    public virtual void OnEveryUpdate()
+    {
+
     }
 }
