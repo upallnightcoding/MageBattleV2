@@ -6,30 +6,71 @@ public class PlayerJumpState : FiniteState
 {
     public static string TITLE = "Jump";
 
-    private float jumpHeight = 0.0f;
+    private HeroCntrl heroCntrl = null;
 
-    public PlayerJumpState(float jumpHeight) : base(TITLE)
+    private JumpType state = JumpType.INITIAL;
+
+    public PlayerJumpState(HeroCntrl heroCntrl) : base(TITLE)
     {
-        this.jumpHeight = jumpHeight;
+        this.heroCntrl = heroCntrl;
     }
 
     public override void OnEnter()
     {
-        Context.SetJumpHeight(jumpHeight);
+        state = JumpType.START_JUMP;
+        heroCntrl.ySpeed = heroCntrl.jumpHeight;
     }
 
     public override void OnExit() { }
 
     public override string OnUpdate(InputCntrl inputKeys, float dt)
     {
-        string state = null;
+        string nextState = null;
 
-        if (inputKeys.RightKey) state = PlayerMoveRightState.TITLE;
+        if (inputKeys.RightKey) nextState = PlayerMoveState.TITLE;
 
-        if (inputKeys.LeftKey) state = PlayerMoveLeftState.TITLE;
+        if (inputKeys.LeftKey) nextState = PlayerMoveState.TITLE;
 
-        Context.UpdateJumpHeight(Physics.gravity.y * dt);
+        switch(state)
+        {
+            case JumpType.START_JUMP:
+                StateStartJump(inputKeys);
+                break;
+            case JumpType.JUMPING:
+                StateJumping();
+                break;
+            case JumpType.END_JUMP:
+                nextState = StateEndJump();
+                break;
+        }
 
-        return (state);
+        return (nextState);
     }
+
+    private void StateStartJump(InputCntrl inputKeys)
+    {
+        state = JumpType.JUMPING;
+        inputKeys.StopJumping();
+    }
+
+    private void StateJumping()
+    {
+        state = (heroCntrl.charCntrl.isGrounded) 
+            ? JumpType.END_JUMP : JumpType.JUMPING;
+    }
+
+    private string StateEndJump()
+    {
+        state = JumpType.INITIAL;
+
+        return (PlayerMoveState.TITLE);
+    }
+}
+
+public enum JumpType
+{
+    START_JUMP,
+    JUMPING,
+    END_JUMP,
+    INITIAL
 }

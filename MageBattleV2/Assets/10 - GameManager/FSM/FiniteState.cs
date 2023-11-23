@@ -5,7 +5,7 @@ using UnityEngine;
 public abstract class FiniteState
 {
     public string Title { get; private set; }
-    public PlayerContext Context { get; set; }
+    //public PlayerContext Context { get; set; }
 
     public FiniteState(string title)
     {

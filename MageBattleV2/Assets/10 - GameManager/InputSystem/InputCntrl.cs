@@ -8,20 +8,33 @@ public class InputCntrl : MonoBehaviour
     public bool LeftKey { get; private set; }
     public bool RightKey { get; private set; }
 
-    public bool JumpKey { get; private set; }
+    public bool UpKey { get; private set; }
+
+    public bool DownKey { get; private set; }
 
     public InputCntrl()
     {
         LeftKey = false;
         RightKey = false;
-        JumpKey = false;
+        UpKey = false;
+        DownKey = false;
+    }
+
+    public void StopJumping() => UpKey = false;
+
+    public void OnDownAction(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            DownKey = true;
+        }
     }
 
     public void OnJump(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            JumpKey = true;
+            UpKey = true;
         }
     }
 

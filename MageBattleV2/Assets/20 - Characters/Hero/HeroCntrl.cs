@@ -5,21 +5,23 @@ using UnityEngine.InputSystem;
 
 public class HeroCntrl : MonoBehaviour
 {
-    [SerializeField] private Transform spellCastPoint;
-    [SerializeField] private SpellSO spell;
+
+    [Header("Player Attribute")]
     [SerializeField] private float maximumSpeed;
     [SerializeField] private float rotationSpeed;
-    [SerializeField] private float jumpHeight;
+
+    [SerializeField] public float jumpHeight;
     [SerializeField] private Transform groundPoint;
     [SerializeField] private LayerMask groundMask;
     [SerializeField] private InputCntrl inputCntrl;
 
-    private float playerSpeed = 4.0f;
-    private float floorLevel = -0.056f;
-    private Vector2 playerMove;
-    private CharacterController charCntrl;
+    [Header("Spell Casting")]
+    [SerializeField] private Transform spellCastPoint;
+    [SerializeField] private SpellSO spell;
+
+    // Components
+    public CharacterController charCntrl;
     private Animator animator;
-    //private Vector3 moveDirection;
 
     private SpellCasterCntrl spellCaster = null;
 
@@ -29,7 +31,9 @@ public class HeroCntrl : MonoBehaviour
 
     private float timeBetweenCast = 0.0f;
 
-    private PlayerContext playerContext = null;
+    // Hero Movement
+    public Vector3 inputDirection = Vector3.zero;
+    public float ySpeed = 0.0f;
 
     // Start is called before the first frame update
     private void Awake()
@@ -37,13 +41,11 @@ public class HeroCntrl : MonoBehaviour
         charCntrl = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
 
-        playerContext = new PlayerContext();
-
-        fsm = new FiniteStateMachine(playerContext);
-        fsm.Add(new PlayerIdleState());
-        fsm.Add(new PlayerMoveLeftState());
-        fsm.Add(new PlayerMoveRightState());
-        fsm.Add(new PlayerJumpState(jumpHeight));
+        fsm = new FiniteStateMachine();
+        fsm.Add(new PlayerIdleState(this));
+        fsm.Add(new PlayerMoveState(this));
+        //fsm.Add(new PlayerMoveRightState(this));
+        fsm.Add(new PlayerJumpState(this));
 
         spellCaster = new SpellCasterCntrl();
         spellCaster.Set(spell);
@@ -54,45 +56,35 @@ public class HeroCntrl : MonoBehaviour
     {
         fsm.OnUpdate(inputCntrl, Time.deltaTime);
 
-        MovePlayer(playerContext, Time.deltaTime);
+        UpdateEveryFrame(Time.deltaTime);
 
         CastSpell(Time.deltaTime);
     }
 
-    public void MovePlayer(PlayerContext playerContext, float dt)
+    private void UpdateEveryFrame(float dt)
     {
-        RaycastHit hit;
-        playerContext.IsGrounded = Physics.Raycast(gameObject.transform.position, Vector3.down, out hit, 2.0f);
+        bool isGround = charCntrl.isGrounded;
+        Debug.Log("IsGrounded: " + isGround);
 
-        /*Debug.Log($"Ground: {isGrounded}, {gameObject.transform.position}");
+        ySpeed += Physics.gravity.y * dt;
 
-        if (isGrounded)
+        Vector3 direction = inputDirection;
+        direction.Normalize();
+
+        float magnitude = Mathf.Clamp01(direction.magnitude);
+        Vector3 velocity = magnitude * maximumSpeed * direction;
+        velocity.y = ySpeed;
+
+        animator.SetFloat("Speed", magnitude, 0.05f, dt);
+
+        charCntrl.Move(velocity * dt);
+
+        if (direction != Vector3.zero)
         {
-            playerContext.SetJumpHeight(0.0f);
+            Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
 
-            if (onJump)
-            {
-                playerContext.SetJumpHeight(jumpHeight);
-                onJump = false;
-            }
-        }*/
-
-        playerContext.moveDirection.Normalize();
-
-        if (playerContext.moveDirection != Vector3.zero)
-        {
-            float inputMagnitude = Mathf.Clamp01(playerContext.moveDirection.magnitude);
-
-            Vector3 velocity = inputMagnitude * maximumSpeed * playerContext.moveDirection;
-            velocity.y = playerContext.GetJumpHeight();
-
-            animator.SetFloat("Speed", inputMagnitude, 0.05f, dt);
-
-            charCntrl.Move(velocity * dt);
-
-            Quaternion toRotation = Quaternion.LookRotation(playerContext.moveDirection, Vector3.up);
-
-            gameObject.transform.rotation = Quaternion.RotateTowards(gameObject.transform.rotation, toRotation, rotationSpeed * dt);
+            transform.rotation = 
+                Quaternion.RotateTowards(transform.rotation, rotation, rotationSpeed * dt);
         }
     }
 
@@ -110,35 +102,16 @@ public class HeroCntrl : MonoBehaviour
     }
 }
 
-public class PlayerMoveRightState : FiniteState
+public class PlayerMoveState : FiniteState
 {
-    public static string TITLE = "MoveRight";
+    public static string TITLE = "Move";
 
-    public PlayerMoveRightState() : base(TITLE) { }
+    private HeroCntrl heroCntrl = null;
 
-    public override void OnEnter() { }
-
-    public override void OnExit() { }
-
-    public override string OnUpdate(InputCntrl inputKeys, float dt) 
+    public PlayerMoveState(HeroCntrl heroCntrl) : base(TITLE) 
     {
-        string state = null;
-
-        if (inputKeys.LeftKey) state = PlayerMoveLeftState.TITLE;
-
-        if (inputKeys.JumpKey) state = PlayerJumpState.TITLE;
-
-        Context.SetMove(1.0f);
-
-        return (state);
+        this.heroCntrl = heroCntrl;
     }
-}
-
-public class PlayerMoveLeftState : FiniteState
-{
-    public static string TITLE = "MoveLeft";
-
-    public PlayerMoveLeftState() : base(TITLE) { }
 
     public override void OnEnter() { }
 
@@ -148,11 +121,25 @@ public class PlayerMoveLeftState : FiniteState
     {
         string state = null;
 
-        if (inputKeys.RightKey) state = PlayerMoveRightState.TITLE;
+        if (inputKeys.RightKey)
+        {
+            heroCntrl.inputDirection.x = 1.0f;
+        }
 
-        if (inputKeys.JumpKey) state = PlayerJumpState.TITLE;
+        if (inputKeys.LeftKey)
+        {
+            heroCntrl.inputDirection.x = -1.0f;
+        }
 
-        Context.SetMove(-1.0f);
+        if (inputKeys.UpKey)
+        {
+            state = PlayerJumpState.TITLE;
+        }
+
+        if (inputKeys.DownKey)
+        {
+            state = PlayerIdleState.TITLE;
+        }
 
         return (state);
     }
@@ -162,7 +149,12 @@ public class PlayerIdleState : FiniteState
 {
     public static string TITLE = "Idle";
 
-    public PlayerIdleState() : base(TITLE) { }
+    private HeroCntrl heroCntrl = null;
+
+    public PlayerIdleState(HeroCntrl heroCntrl) : base(TITLE) 
+    {
+        this.heroCntrl = heroCntrl;
+    }
 
     public override void OnEnter() { }
 
@@ -172,11 +164,13 @@ public class PlayerIdleState : FiniteState
     {
         string state = PlayerIdleState.TITLE;
 
-        if (inputKeys.RightKey) state = PlayerMoveRightState.TITLE;
+        if (inputKeys.RightKey) state = PlayerMoveState.TITLE;
 
-        if (inputKeys.LeftKey) state = PlayerMoveLeftState.TITLE;
+        if (inputKeys.LeftKey) state = PlayerMoveState.TITLE;
 
-        Context.SetMove(0.0f);
+        if (inputKeys.UpKey) state = PlayerJumpState.TITLE;
+
+        heroCntrl.inputDirection.x = 0.0f;
 
         return (state);
     }
