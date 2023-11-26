@@ -6,50 +6,64 @@ public class SpellCasterCntrl
 {
     private SpellSO spell;
     private int castPerRound;
-    private float reloadTimeSec;
-    private float castingRateSec;
+    private float lastCoolDownTime;
+    private float lastCastingRateSec;
+
+    private float coolDownTimeSec;
+    private float castPerSec;
+    private GameObject modelPreFab;
+    private float spellForce;
 
     public void Set(SpellSO spell)
     {
         this.spell = spell;
+
         castPerRound = spell.castPerRound;
-        reloadTimeSec = 0.0f;
-        castingRateSec = CalcCastingRate();
+        coolDownTimeSec = spell.coolDownTime;
+        castPerSec = CalcCastingRate();
+        modelPreFab = spell.modelPreFab;
+        spellForce = spell.forwardForce;
+
+        lastCoolDownTime = InitCheckTime(coolDownTimeSec);
+        lastCastingRateSec = InitCheckTime(castPerSec);
     }
 
-    public void Cast(Vector3 spawnPoint, Vector3 direction, float dt)
+    public void Cast(Vector3 spawnPoint, Vector3 direction)
     {
-        Casting(spawnPoint, direction, dt);
+        Casting(spawnPoint, direction);
     }
 
-    private void Casting(Vector3 spawnPoint, Vector3 direction, float dt)
+    private void Casting(Vector3 spawnPoint, Vector3 direction)
     {
-        if (reloadTimeSec <= 0.0f)
+        if (CheckTime(lastCoolDownTime, coolDownTimeSec))
         {
             if (castPerRound != 0)
             {
-                if (castingRateSec <= 0.0f)
+                if (CheckTime(lastCastingRateSec, castPerSec))
                 {
-                    GameObject cast = 
-                        Object.Instantiate(spell.modelPreFab, spawnPoint, Quaternion.identity);
-                    //cast.transform.forward = direction;
-                    cast.GetComponent<Rigidbody>().AddForce(direction * spell.forwardForce, ForceMode.Impulse);
+                    GameObject cast = Object.Instantiate(modelPreFab, spawnPoint, Quaternion.identity);
+                    cast.transform.forward = direction;
+                    cast.GetComponent<Rigidbody>().AddForce(direction * spellForce, ForceMode.Impulse);
 
-                    castingRateSec = CalcCastingRate();
+                    lastCastingRateSec = Time.time;
                     castPerRound--;
-                } else
-                {
-                    castingRateSec -= dt;
-                }
+                } 
             } else
             {
-                reloadTimeSec = spell.reloadTimeSec;
+                lastCoolDownTime = Time.time;
                 castPerRound = spell.castPerRound;
             }
-        } else
-        {
-            reloadTimeSec -= dt;
-        }
+        } 
+    }
+
+    private float InitCheckTime(float delta)
+    {
+        return (Time.time + delta);
+    }
+
+    private bool CheckTime(float lastTimeCheck, float delta)
+    {
+        return ((Time.time - lastTimeCheck) >= delta);
     }
 
     private float CalcCastingRate()

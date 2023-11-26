@@ -17,6 +17,7 @@ public class PlayerJumpState : FiniteState
 
     public override void OnEnter()
     {
+        Debug.Log("Start jump ...");
         state = JumpType.START_JUMP;
         heroCntrl.ySpeed = heroCntrl.jumpHeight;
     }
@@ -37,7 +38,7 @@ public class PlayerJumpState : FiniteState
                 StateStartJump(inputKeys);
                 break;
             case JumpType.JUMPING:
-                StateJumping();
+                StateJumping(dt);
                 break;
             case JumpType.END_JUMP:
                 nextState = StateEndJump();
@@ -49,19 +50,29 @@ public class PlayerJumpState : FiniteState
 
     private void StateStartJump(InputCntrl inputKeys)
     {
+        Debug.Log("StateStartJump ...");
         state = JumpType.JUMPING;
         inputKeys.StopJumping();
     }
 
-    private void StateJumping()
+    private void StateJumping(float dt)
     {
-        state = (heroCntrl.charCntrl.isGrounded) 
-            ? JumpType.END_JUMP : JumpType.JUMPING;
+        heroCntrl.ySpeed += Physics.gravity.y * dt;
+
+        if (heroCntrl.charCntrl.isGrounded)
+        {
+            state = JumpType.END_JUMP;
+        } else
+        {
+            state = JumpType.JUMPING;
+        }
     }
 
     private string StateEndJump()
     {
         state = JumpType.INITIAL;
+
+        heroCntrl.ySpeed = -0.5f;
 
         return (PlayerMoveState.TITLE);
     }

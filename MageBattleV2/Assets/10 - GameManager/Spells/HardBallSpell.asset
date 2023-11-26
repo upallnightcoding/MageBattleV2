@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: HardBallSpell
   m_EditorClassIdentifier: 
   spellName: Ball
-  castPerSec: 4
-  castPerRound: 5
-  reloadTimeSec: 1
-  forwardForce: 100
+  castPerSec: 6
+  castPerRound: 3
+  coolDownTime: 1
+  forwardForce: 25
   fx: {fileID: 5770119758994083323, guid: 8d37137d624ffa54c90236fd3ea0d247, type: 3}
   modelPreFab: {fileID: 5282470066545665838, guid: 11f26a810e5290e4ab41909ebd5fce0b, type: 3}
   trail: {fileID: 0}

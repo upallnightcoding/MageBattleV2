@@ -15,7 +15,7 @@ public class SpellSO : ScriptableObject
     public int castPerRound;    
 
     // Wait time for the next round to begin
-    public float reloadTimeSec;
+    public float coolDownTime;
 
     // The amount of force produced by the spell forward
     public float forwardForce;

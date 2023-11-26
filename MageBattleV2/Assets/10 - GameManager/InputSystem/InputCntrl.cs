@@ -5,12 +5,13 @@ using UnityEngine;
 
 public class InputCntrl : MonoBehaviour
 {
-    public bool LeftKey { get; private set; }
-    public bool RightKey { get; private set; }
+    public bool LeftKey { get; set; }
+    public bool RightKey { get; set; }
 
-    public bool UpKey { get; private set; }
+    public bool FireKey { get; set; }
 
-    public bool DownKey { get; private set; }
+    public bool UpKey { get; set; }
+    public bool DownKey { get; set; }
 
     public InputCntrl()
     {
@@ -22,18 +23,28 @@ public class InputCntrl : MonoBehaviour
 
     public void StopJumping() => UpKey = false;
 
+    public void OnFireAction(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            FireKey = true;
+        }
+    }
+
     public void OnDownAction(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
             DownKey = true;
+            UpKey = false;
         }
     }
 
-    public void OnJump(InputAction.CallbackContext context)
+    public void OnUpAction(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
+            DownKey = false;
             UpKey = true;
         }
     }

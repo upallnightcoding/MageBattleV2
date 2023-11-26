@@ -27,9 +27,7 @@ public class HeroCntrl : MonoBehaviour
 
     private FiniteStateMachine fsm = null;
 
-    private bool castSpellRequest = false;
-
-    private float timeBetweenCast = 0.0f;
+    public Vector3 direction = Vector3.zero;
 
     // Hero Movement
     public Vector3 inputDirection = Vector3.zero;
@@ -44,7 +42,6 @@ public class HeroCntrl : MonoBehaviour
         fsm = new FiniteStateMachine();
         fsm.Add(new PlayerIdleState(this));
         fsm.Add(new PlayerMoveState(this));
-        //fsm.Add(new PlayerMoveRightState(this));
         fsm.Add(new PlayerJumpState(this));
 
         spellCaster = new SpellCasterCntrl();
@@ -58,18 +55,13 @@ public class HeroCntrl : MonoBehaviour
 
         UpdateEveryFrame(Time.deltaTime);
 
-        CastSpell(Time.deltaTime);
+        CastSpell(inputCntrl, Time.deltaTime);
     }
 
     private void UpdateEveryFrame(float dt)
     {
-        bool isGround = charCntrl.isGrounded;
-        Debug.Log("IsGrounded: " + isGround);
-
-        ySpeed += Physics.gravity.y * dt;
-
-        Vector3 direction = inputDirection;
-        direction.Normalize();
+        direction = inputDirection;
+        //direction.Normalize();
 
         float magnitude = Mathf.Clamp01(direction.magnitude);
         Vector3 velocity = magnitude * maximumSpeed * direction;
@@ -88,17 +80,13 @@ public class HeroCntrl : MonoBehaviour
         }
     }
 
-    private void CastSpell(float dt)
+    private void CastSpell(InputCntrl inputCntrl, float dt)
     {
-        if (castSpellRequest)
+        if (inputCntrl.FireKey)
         {
-            spellCaster.Cast(spellCastPoint.position, transform.forward, timeBetweenCast);
-            castSpellRequest = false;
-            timeBetweenCast = 0.0f;
-        } else
-        {
-            timeBetweenCast += dt;
-        }
+            inputCntrl.FireKey = false;
+            spellCaster.Cast(spellCastPoint.position, transform.forward);
+        } 
     }
 }
 
@@ -123,21 +111,25 @@ public class PlayerMoveState : FiniteState
 
         if (inputKeys.RightKey)
         {
-            heroCntrl.inputDirection.x = 1.0f;
+            inputKeys.RightKey = false;
+            heroCntrl.inputDirection.x = -1.0f;
         }
 
         if (inputKeys.LeftKey)
         {
-            heroCntrl.inputDirection.x = -1.0f;
+            inputKeys.LeftKey = false;
+            heroCntrl.inputDirection.x = 1.0f;
         }
 
         if (inputKeys.UpKey)
         {
+            inputKeys.UpKey = false;
             state = PlayerJumpState.TITLE;
         }
 
         if (inputKeys.DownKey)
         {
+            inputKeys.DownKey = false;
             state = PlayerIdleState.TITLE;
         }
 
@@ -156,21 +148,22 @@ public class PlayerIdleState : FiniteState
         this.heroCntrl = heroCntrl;
     }
 
-    public override void OnEnter() { }
+    public override void OnEnter() 
+    {
+        heroCntrl.inputDirection.x = 0.0f;
+    }
 
     public override void OnExit() { }
 
     public override string OnUpdate(InputCntrl inputKeys, float dt) 
     {
-        string state = PlayerIdleState.TITLE;
+        string state = null;
 
         if (inputKeys.RightKey) state = PlayerMoveState.TITLE;
 
         if (inputKeys.LeftKey) state = PlayerMoveState.TITLE;
 
         if (inputKeys.UpKey) state = PlayerJumpState.TITLE;
-
-        heroCntrl.inputDirection.x = 0.0f;
 
         return (state);
     }
